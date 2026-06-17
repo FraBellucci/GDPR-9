@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>MOD9 – Registro dei Trattamenti: Abbina le Colonne</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif}
+body{background:linear-gradient(135deg,#4a148c,#6a1b9a);display:flex;justify-content:center;align-items:center;min-height:100vh;overflow:hidden}
+.container{width:800px;height:550px;background:#fff;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.5);overflow:hidden;display:flex;flex-direction:column}
+.header{background:linear-gradient(135deg,#4a148c,#6a1b9a);color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.header h1{font-size:15px;font-weight:700}.header p{font-size:11px;opacity:.8;margin-top:1px}
+button{padding:6px 12px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s}
+.btn-white{background:#fff;color:#4a148c}.btn-white:hover{background:#f3e5f5}
+.btn-outline{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.4)}.btn-outline:hover{background:rgba(255,255,255,.25)}
+.btn-group{display:flex;gap:8px}
+.status-bar{display:flex;align-items:center;gap:16px;padding:7px 14px;background:#f5f5f5;border-bottom:1px solid #e0e0e0;flex-shrink:0;font-size:12px;color:#555}
+.score-badge{background:#4a148c;color:#fff;border-radius:20px;padding:2px 12px;font-size:12px;font-weight:700}
+.content{flex:1;display:flex;overflow:hidden;min-height:0;padding:12px 14px;gap:12px}
+.col-pool{width:200px;flex-shrink:0;display:flex;flex-direction:column;gap:5px}
+.col-pool h2{font-size:11px;font-weight:700;color:#4a148c;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
+.item-card{background:#f3e5f5;border:2px solid #ce93d8;border-radius:7px;padding:7px 10px;font-size:11px;font-weight:600;color:#4a148c;cursor:grab;transition:all .2s;user-select:none;line-height:1.3}
+.item-card:hover{background:#e1bee7;transform:translateY(-1px);box-shadow:0 3px 8px rgba(0,0,0,.15)}
+.item-card.dragging{opacity:.4}
+.item-card.placed{opacity:.3;cursor:default}
+.zones-col{flex:1;display:flex;flex-direction:column;gap:6px;overflow-y:auto}
+.zone-row{background:#fafafa;border:2px solid #e0e0e0;border-radius:8px;padding:8px 10px;min-height:50px;transition:all .2s;display:flex;flex-direction:column;gap:4px}
+.zone-row.drag-over{background:#f3e5f5;border-color:#7b1fa2;transform:scale(1.01)}
+.zone-row.correct{background:#e8f5e9;border-color:#2e7d32}
+.zone-row.wrong{background:#ffebee;border-color:#c62828;animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.zone-label{font-size:10px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.5px}
+.zone-content{display:flex;flex-wrap:wrap;gap:4px;min-height:20px}
+.placed-chip{background:#7b1fa2;color:#fff;border-radius:5px;padding:3px 8px;font-size:10px;font-weight:600;cursor:pointer;transition:all .2s}
+.placed-chip:hover{background:#4a148c}
+.placed-chip.correct-chip{background:#2e7d32;cursor:default}
+.placed-chip.wrong-chip{background:#c62828}
+.win-overlay{position:absolute;inset:0;background:rgba(74,20,140,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:400;animation:fadeIn .4s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.win-overlay h2{color:#fff;font-size:22px;font-weight:700}
+.win-overlay p{color:#e1bee7;font-size:13px;text-align:center;max-width:340px;line-height:1.5}
+.win-stats{display:flex;gap:10px}
+.win-stat{background:rgba(255,255,255,.15);border-radius:8px;padding:8px 16px;color:#fff;font-size:13px;font-weight:700;text-align:center}
+.win-stat span{display:block;font-size:10px;opacity:.8;margin-bottom:2px}
+.btn-win{background:#fff;color:#4a148c;padding:9px 24px;font-size:13px;border-radius:8px;font-weight:700;margin-top:4px;cursor:pointer;border:none}
+.btn-check{background:linear-gradient(135deg,#4a148c,#6a1b9a);color:#fff;padding:8px 20px;font-size:12px;border-radius:7px;font-weight:700;align-self:flex-end;margin-top:4px}
+.bottom-bar{padding:8px 14px;border-top:1px solid #e0e0e0;display:flex;justify-content:flex-end;flex-shrink:0;background:#fafafa}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div><h1>📋 Registro dei Trattamenti – Abbina le Colonne</h1><p>Modulo 9 – Il Registro ex art. 30 GDPR</p></div>
+    <div class="btn-group">
+      <button class="btn-outline" onclick="resetGame()">🔄 Rigioca</button>
+      <button class="btn-white" onclick="window.close()">Torna al corso</button>
+    </div>
+  </div>
+  <div class="status-bar">
+    <span class="score-badge">Corretti: <span id="scoreCount">0</span>/10</span>
+    <span style="font-size:11px;color:#888">Trascina ogni voce nella colonna del registro a cui appartiene</span>
+  </div>
+  <div class="content" style="position:relative" id="mainContent">
+    <div class="col-pool">
+      <h2>📌 Voci</h2>
+      <div id="pool"></div>
+    </div>
+    <div class="zones-col" id="zonesCol"></div>
+  </div>
+  <div class="bottom-bar"><button class="btn-check" onclick="checkAll()">✅ Verifica tutto</button></div>
+</div>
+<script>
+const ZONES=[
+  {id:'finalita',label:'Finalità del trattamento',items:['Gestione paghe','Selezione del personale']},
+  {id:'base',label:'Base giuridica',items:['Adempimento contrattuale','Obbligo di legge']},
+  {id:'categorie',label:'Categorie di dati',items:['Dati di salute','Dati biometrici']},
+  {id:'destinatari',label:'Destinatari / trasferimenti',items:['Studio medico convenzionato','Fornitore estero extra-UE']},
+  {id:'conservazione',label:'Termini di conservazione',items:['10 anni (obbligo fiscale)','2 anni dalla fine del rapporto']},
+];
+
+let dragging=null,placed={},correct=0;
+const allItems=ZONES.flatMap(z=>z.items);
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function initGame(){placed={};correct=0;document.getElementById('scoreCount').textContent='0';renderPool();renderZones();}
+
+function renderPool(){const pool=document.getElementById('pool');pool.innerHTML='';shuffle([...allItems]).forEach(item=>{const d=document.createElement('div');d.className='item-card';d.textContent=item;d.draggable=true;d.dataset.item=item;d.addEventListener('dragstart',e=>{dragging=item;d.classList.add('dragging');e.dataTransfer.effectAllowed='move';});d.addEventListener('dragend',()=>d.classList.remove('dragging'));pool.appendChild(d);});}
+
+function renderZones(){const col=document.getElementById('zonesCol');col.innerHTML='';ZONES.forEach(z=>{const row=document.createElement('div');row.className='zone-row';row.dataset.zone=z.id;row.innerHTML=`<div class="zone-label">${z.label}</div><div class="zone-content" id="zc-${z.id}"></div>`;row.addEventListener('dragover',e=>{e.preventDefault();row.classList.add('drag-over');});row.addEventListener('dragleave',()=>row.classList.remove('drag-over'));row.addEventListener('drop',e=>{e.preventDefault();row.classList.remove('drag-over');if(dragging)dropItem(dragging,z.id,z.items);});col.appendChild(row);});}
+
+function dropItem(item,zoneId,correctItems){if(placed[item])return;placed[item]=zoneId;const poolCard=document.querySelector(`.item-card[data-item="${CSS.escape(item)}"]`);if(poolCard)poolCard.classList.add('placed');const zc=document.getElementById('zc-'+zoneId);const chip=document.createElement('div');chip.className='placed-chip';chip.textContent=item;chip.dataset.item=item;chip.dataset.zone=zoneId;chip.onclick=()=>{if(!chip.classList.contains('correct-chip')){delete placed[item];if(poolCard)poolCard.classList.remove('placed');chip.remove();}};zc.appendChild(chip);}
+
+function checkAll(){let c=0;Object.entries(placed).forEach(([item,zoneId])=>{const zone=ZONES.find(z=>z.id===zoneId);const chip=document.querySelector(`.placed-chip[data-item="${CSS.escape(item)}"]`);if(!chip)return;if(zone&&zone.items.includes(item)){chip.classList.add('correct-chip');chip.classList.remove('wrong-chip');c++;}else{chip.classList.add('wrong-chip');}});correct=c;document.getElementById('scoreCount').textContent=c;if(c===10)setTimeout(showWin,400);}
+
+function showWin(){const area=document.getElementById('mainContent');const win=document.createElement('div');win.className='win-overlay';win.innerHTML=`<div style="font-size:52px">🎉</div><h2>Registro completo!</h2><p>Hai abbinato correttamente tutte le voci. Il registro ex art. 30 GDPR deve contenere finalità, base giuridica, categorie di dati, destinatari e termini di conservazione per ciascun trattamento.</p><div class="win-stats"><div class="win-stat"><span>Corretti</span>10/10</div></div><button class="btn-win" onclick="resetGame()">🔄 Rigioca</button>`;area.appendChild(win);}
+
+function resetGame(){document.querySelector('.win-overlay')?.remove();initGame();}
+initGame();
+</script>
+</body>
+</html>
